@@ -4,29 +4,44 @@ import lv.acodemy.page_object.AddStudentPage;
 import lv.acodemy.page_object.MainPage;
 import lv.acodemy.page_object.Notifications;
 import lv.acodemy.utils.LocalDriverManager;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static java.time.Duration.ofSeconds;
 import static lv.acodemy.utils.ConfigurationProperties.getConfiguration;
+import static lv.acodemy.utils.LocalDriverManager.closeDriver;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 public class StudentAppTest {
 
-    Faker fakeData = new Faker();
-    WebDriverWait wait = new WebDriverWait(LocalDriverManager.getInstance(), ofSeconds(getConfiguration().getLong("wait.time")));
-    MainPage mainPage = new MainPage();
-    AddStudentPage addStudentPage = new AddStudentPage();
-    Notifications notifications = new Notifications(wait);
+    WebDriver driver = LocalDriverManager.getInstance();
+    Faker fakeData;
+    WebDriverWait wait;
+    MainPage mainPage;
+    AddStudentPage addStudentPage;
+    Notifications notifications;
 
-    @Test()
+    @BeforeMethod
+    public void beforeTest() {
+        driver = LocalDriverManager.getInstance();
+        wait = new WebDriverWait(driver, ofSeconds(getConfiguration().getLong("wait.time")));
+        fakeData = new Faker();
+        mainPage = new MainPage();
+        addStudentPage = new AddStudentPage();
+        notifications = new Notifications(wait);
+    }
+
+    @Test(invocationCount = 2)
     public void createStudentTest() {
-        LocalDriverManager.getInstance().manage().timeouts().implicitlyWait(ofSeconds(getConfiguration().getLong("wait.time")));
+        driver.manage().timeouts().implicitlyWait(ofSeconds(getConfiguration().getLong("wait.time")));
 
         logger.info("Will open now: " + getConfiguration().getString("app.url"));
-        LocalDriverManager.getInstance().get(getConfiguration().getString("app.url"));
+        driver.get(getConfiguration().getString("app.url"));
 
         mainPage.openAddStudentForm();
 
@@ -38,9 +53,8 @@ public class StudentAppTest {
         assertThat(notifications.getNotificationSuccessMessage()).isEqualTo("Student successfully added");
     }
 
-
     @AfterMethod
     public void tearDown() {
-        LocalDriverManager.closeDriver();
+        closeDriver();
     }
 }
